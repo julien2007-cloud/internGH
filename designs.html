@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InternGH — Design options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f4f4f2; font-family: Inter, system-ui, sans-serif; color: #111; }
+  button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
+
+  /* ---------- Picker chrome ---------- */
+  .picker { position: sticky; top: 0; z-index: 50; background: rgba(244,244,242,.85); backdrop-filter: blur(10px); border-bottom: 1px solid #e3e3df; }
+  .picker-inner { max-width: 1180px; margin: 0 auto; padding: 14px 24px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .picker strong { margin-right: auto; font-weight: 600; }
+  .picker a { text-decoration: none; color: #333; font-size: 14px; padding: 8px 14px; border-radius: 999px; border: 1px solid #ddd; background: #fff; transition: all .2s; }
+  .picker a:hover { border-color: #111; color: #111; }
+  html { scroll-behavior: smooth; }
+  .option { scroll-margin-top: 30px; max-width: 1180px; margin: 0 auto; padding: 56px 24px 24px; }
+  .option-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 18px; flex-wrap: wrap; }
+  .option-head .tag { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #888; }
+  .option-head h2 { font-size: 26px; font-weight: 600; margin: 4px 0; }
+  .option-head p { color: #555; max-width: 640px; font-size: 15px; line-height: 1.55; }
+  .option-head ul { list-style: none; font-size: 13px; color: #555; display: grid; gap: 4px; }
+  .option-head li::before { content: "→ "; color: #aaa; }
+  .frame { position: relative; overflow: hidden; border-radius: 18px; border: 1px solid #e2e2de; background: #fff; box-shadow: 0 30px 60px -30px rgba(0,0,0,.18); }
+  .hidden { display: none !important; }
+
+  /* =========================================================
+     A — Clean Paper (editorial)
+     ========================================================= */
+  .pa { --ink:#121212; --mute:#6d6d6d; --rule:#ececec; --acc:#0f7b4f; font-family: Inter, sans-serif; color: var(--ink); padding: 28px 48px 48px; }
+  .pa::before { content:""; position:absolute; inset:0; pointer-events:none; background: radial-gradient(500px circle at var(--x,50%) var(--y,30%), rgba(15,123,79,.07), transparent 60%); transition: background .1s; }
+  .pa nav { display:flex; align-items:center; gap:28px; padding-bottom:22px; border-bottom:1px solid var(--rule); position:relative; }
+  .pa .logo { font-family: Fraunces, serif; font-size: 24px; font-weight: 600; margin-right:auto; }
+  .pa .logo i { color: var(--acc); font-style: italic; font-weight: 400; }
+  .pa nav a { font-size:14px; color:var(--mute); text-decoration:none; position:relative; }
+  .pa nav a::after { content:""; position:absolute; left:0; bottom:-4px; height:1px; width:100%; background:var(--ink); transform:scaleX(0); transform-origin:right; transition:transform .35s cubic-bezier(.2,.8,.2,1); }
+  .pa nav a:hover { color:var(--ink); } .pa nav a:hover::after { transform:scaleX(1); transform-origin:left; }
+  .pa-btn { position:relative; overflow:hidden; padding:11px 20px; border:1px solid var(--ink); font-size:14px; font-weight:500; isolation:isolate; transition: color .35s; }
+  .pa-btn::before { content:""; position:absolute; inset:0; background:var(--ink); z-index:-1; transform:translateY(101%); transition:transform .4s cubic-bezier(.2,.8,.2,1); }
+  .pa-btn:hover { color:#fff; } .pa-btn:hover::before { transform:translateY(0); }
+  .pa-btn.solid { background:var(--ink); color:#fff; } .pa-btn.solid::before { background:var(--acc); }
+  .pa-btn:active { transform: scale(.97); }
+  .pa header { display:grid; grid-template-columns: 1.4fr 1fr; gap:48px; padding:56px 0 36px; position:relative; }
+  .pa h1 { font-family:Fraunces, serif; font-weight:400; font-size:64px; line-height:1.02; letter-spacing:-.02em; }
+  .pa h1 em { color:var(--acc); }
+  .pa header p { color:var(--mute); line-height:1.65; font-size:16px; align-self:end; margin-bottom:16px; }
+  .pa .chips { display:flex; gap:26px; border-bottom:1px solid var(--rule); position:relative; flex-wrap:wrap; }
+  .pa .chip { padding:12px 0; font-size:14px; color:var(--mute); border-bottom:2px solid transparent; margin-bottom:-1px; transition: color .2s, border-color .3s; }
+  .pa .chip:hover { color:var(--ink); }
+  .pa .chip.on { color:var(--ink); border-color:var(--acc); }
+  .pa .row { display:grid; grid-template-columns: 1fr 180px 120px; align-items:center; gap:24px; padding:26px 0; border-bottom:1px solid var(--rule); position:relative; transition: padding .35s cubic-bezier(.2,.8,.2,1); }
+  .pa .row:hover { padding-left:14px; }
+  .pa .co { font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--mute); }
+  .pa .role { font-family:Fraunces, serif; font-size:28px; margin:6px 0; }
+  .pa .meta { font-size:13px; color:var(--mute); }
+  .pa .meta b { color:var(--acc); font-weight:500; }
+  .pa .cd { font-family:Fraunces, serif; font-size:22px; font-variant-numeric: tabular-nums; }
+  .pa .cd small { display:block; font-family:Inter; font-size:12px; color:var(--mute); }
+  .pa .cd.urgent { color:#b4231b; }
+  .pa .apply { justify-self:end; font-size:14px; font-weight:500; display:inline-flex; gap:8px; align-items:center; }
+  .pa .apply span { transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+  .pa .row:hover .apply span { transform: translateX(6px); }
+
+  /* =========================================================
+     B — Soft Glass (airy, rounded)
+     ========================================================= */
+  .gl { --ink:#0f172a; --mute:#64748b; --acc:#4f46e5; font-family:'Plus Jakarta Sans', sans-serif; color:var(--ink); padding:24px 36px 44px; background:#fff; }
+  .gl .blob { position:absolute; border-radius:50%; filter: blur(70px); opacity:.55; pointer-events:none; will-change: transform; }
+  .gl .b1 { width:420px; height:420px; background:#c7d2fe; top:-120px; left:-80px; }
+  .gl .b2 { width:360px; height:360px; background:#fbcfe8; top:120px; right:-60px; }
+  .gl .b3 { width:300px; height:300px; background:#bae6fd; bottom:-120px; left:40%; }
+  .gl > *:not(.blob) { position:relative; }
+  .gl nav { display:flex; align-items:center; gap:10px; padding:10px 10px 10px 18px; border-radius:999px; background:rgba(255,255,255,.65); backdrop-filter: blur(14px); border:1px solid rgba(255,255,255,.9); box-shadow:0 8px 30px rgba(15,23,42,.06); }
+  .gl .logo { font-weight:700; font-size:19px; margin-right:auto; display:flex; align-items:center; gap:8px; }
+  .gl .logo .dot { width:22px; height:22px; border-radius:7px; background:linear-gradient(135deg,#6366f1,#ec4899); }
+  .gl nav a { font-size:14px; color:var(--mute); text-decoration:none; padding:8px 14px; border-radius:999px; transition: background .2s, color .2s; }
+  .gl nav a:hover { background:rgba(99,102,241,.08); color:var(--ink); }
+  .gl-btn { padding:12px 22px; border-radius:999px; font-weight:600; font-size:14px; background:var(--ink); color:#fff; box-shadow:0 10px 24px -8px rgba(15,23,42,.45); transition: transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s; will-change:transform; }
+  .gl-btn:hover { box-shadow:0 16px 30px -10px rgba(79,70,229,.6); }
+  .gl-btn.ghost { background:rgba(255,255,255,.8); color:var(--ink); box-shadow:0 0 0 1px #e2e8f0 inset; }
+  .gl header { text-align:center; padding:60px 0 28px; }
+  .gl .eyebrow { display:inline-block; font-size:13px; padding:6px 14px; border-radius:999px; background:rgba(255,255,255,.75); border:1px solid #e0e7ff; color:var(--acc); font-weight:600; }
+  .gl h1 { font-size:56px; line-height:1.05; letter-spacing:-.03em; font-weight:700; margin:18px auto 14px; max-width:760px; }
+  .gl h1 span { background:linear-gradient(90deg,#4f46e5,#db2777); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .gl header p { color:var(--mute); font-size:17px; max-width:560px; margin:0 auto 24px; line-height:1.6; }
+  .gl .search { display:flex; gap:8px; max-width:560px; margin:0 auto; padding:8px; border-radius:999px; background:rgba(255,255,255,.85); border:1px solid #e2e8f0; box-shadow:0 12px 40px rgba(15,23,42,.08); }
+  .gl .search input { flex:1; border:0; outline:0; background:transparent; padding:0 14px; font:inherit; font-size:15px; }
+  .gl .chips { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:26px 0 28px; }
+  .gl .chip { padding:9px 16px; border-radius:999px; font-size:14px; background:rgba(255,255,255,.7); border:1px solid #e2e8f0; color:var(--mute); transition: all .25s cubic-bezier(.2,.8,.2,1); }
+  .gl .chip:hover { transform: translateY(-2px); color:var(--ink); }
+  .gl .chip.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .gl .grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:18px; }
+  .gl .card { padding:22px; border-radius:24px; background:rgba(255,255,255,.72); backdrop-filter: blur(16px); border:1px solid rgba(255,255,255,.95); box-shadow:0 10px 30px rgba(15,23,42,.06); transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s; }
+  .gl .card:hover { transform: translateY(-6px); box-shadow:0 24px 50px -12px rgba(79,70,229,.25); }
+  .gl .card .top { display:flex; justify-content:space-between; align-items:center; }
+  .gl .av { width:42px; height:42px; border-radius:14px; display:grid; place-items:center; font-weight:700; color:#fff; font-size:14px; }
+  .gl .save { width:36px; height:36px; border-radius:12px; display:grid; place-items:center; background:#f1f5f9; transition: transform .2s, background .2s; }
+  .gl .save:hover { transform: scale(1.1); } .gl .save.on { background:#fde68a; }
+  .gl .card h3 { font-size:18px; margin:16px 0 4px; letter-spacing:-.01em; }
+  .gl .card .co { color:var(--mute); font-size:14px; }
+  .gl .tags { display:flex; gap:6px; flex-wrap:wrap; margin:14px 0; }
+  .gl .tags span { font-size:12px; padding:5px 10px; border-radius:999px; background:#f1f5f9; color:#334155; font-weight:500; }
+  .gl .tags span.paid { background:#dcfce7; color:#166534; }
+  .gl .bar { height:6px; border-radius:6px; background:#eef2ff; overflow:hidden; margin:6px 0 16px; }
+  .gl .bar i { display:block; height:100%; border-radius:6px; background:linear-gradient(90deg,#6366f1,#ec4899); }
+  .gl .left { display:flex; justify-content:space-between; font-size:13px; color:var(--mute); }
+  .gl .left b { color:var(--ink); font-variant-numeric: tabular-nums; }
+  .gl .card .gl-btn { width:100%; }
+
+  /* =========================================================
+     C — Swiss Grid (bold, typographic, custom cursor)
+     ========================================================= */
+  .sw { --ink:#0a0a0a; --mute:#7a7a7a; --acc:#ff3b1f; font-family:'Space Grotesk', sans-serif; color:var(--ink); cursor:none; }
+  .sw * { cursor:none; }
+  .sw .cur-dot, .sw .cur-ring { position:absolute; top:0; left:0; pointer-events:none; z-index:20; border-radius:50%; opacity:0; transition: opacity .2s; }
+  .sw .cur-dot { width:8px; height:8px; background:var(--acc); margin:-4px 0 0 -4px; }
+  .sw .cur-ring { width:40px; height:40px; border:1.5px solid var(--ink); margin:-20px 0 0 -20px; transition: width .3s, height .3s, margin .3s, background .3s, border-color .3s, opacity .2s; }
+  .sw.inside .cur-dot, .sw.inside .cur-ring { opacity:1; }
+  .sw .cur-ring.big { width:84px; height:84px; margin:-42px 0 0 -42px; background:rgba(255,59,31,.12); border-color:var(--acc); }
+  .sw nav { display:grid; grid-template-columns: repeat(4,1fr) auto; border-bottom:1.5px solid var(--ink); }
+  .sw nav > * { padding:16px 24px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; border-right:1.5px solid var(--ink); }
+  .sw nav .logo { font-weight:700; font-size:15px; letter-spacing:0; text-transform:none; }
+  .sw nav .logo b { color:var(--acc); }
+  .sw nav a { color:var(--ink); text-decoration:none; transition: background .2s, color .2s; }
+  .sw nav a:hover { background:var(--ink); color:#fff; }
+  .sw-btn { position:relative; overflow:hidden; padding:14px 24px; border:1.5px solid var(--ink); font-weight:500; text-transform:uppercase; font-size:13px; letter-spacing:.06em; isolation:isolate; transition: color .3s; }
+  .sw-btn::before { content:""; position:absolute; inset:0; background:var(--ink); z-index:-1; transform:scaleX(0); transform-origin:left; transition: transform .45s cubic-bezier(.7,0,.2,1); }
+  .sw-btn:hover { color:#fff; } .sw-btn:hover::before { transform:scaleX(1); }
+  .sw-btn.acc { background:var(--acc); color:#fff; border-color:var(--acc); }
+  .sw nav .sw-btn { border:0; border-right:0; }
+  .sw header { display:grid; grid-template-columns: 2fr 1fr; border-bottom:1.5px solid var(--ink); }
+  .sw h1 { font-size:96px; line-height:.9; letter-spacing:-.05em; font-weight:700; padding:40px 24px 28px; border-right:1.5px solid var(--ink); }
+  .sw h1 span { color:var(--acc); }
+  .sw .side { padding:28px 24px; display:flex; flex-direction:column; justify-content:space-between; gap:24px; }
+  .sw .side p { font-size:16px; line-height:1.5; }
+  .sw .stat { font-family:'JetBrains Mono', monospace; font-size:44px; font-weight:600; }
+  .sw .stat small { display:block; font-family:'Space Grotesk'; font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--mute); }
+  .sw .chips { display:flex; border-bottom:1.5px solid var(--ink); overflow-x:auto; }
+  .sw .chip { padding:14px 22px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; border-right:1.5px solid var(--ink); white-space:nowrap; transition: background .2s, color .2s; }
+  .sw .chip:hover { background:#f2f2f2; }
+  .sw .chip.on { background:var(--acc); color:#fff; }
+  .sw .row { display:grid; grid-template-columns: 70px 1.6fr 1fr 1fr 210px; border-bottom:1.5px solid var(--ink); align-items:stretch; position:relative; overflow:hidden; }
+  .sw .row::before { content:""; position:absolute; inset:0; background:var(--ink); transform:translateY(101%); transition: transform .45s cubic-bezier(.7,0,.2,1); z-index:0; }
+  .sw .row:hover::before { transform:translateY(0); }
+  .sw .row > * { position:relative; z-index:1; padding:22px 24px; transition: color .3s; }
+  .sw .row:hover > * { color:#fff; }
+  .sw .row .n { font-family:'JetBrains Mono'; font-size:13px; color:var(--mute); border-right:1.5px solid var(--ink); }
+  .sw .row .role { font-size:22px; font-weight:500; letter-spacing:-.02em; }
+  .sw .row .role small { display:block; font-size:13px; color:var(--mute); font-weight:400; margin-top:4px; letter-spacing:0; }
+  .sw .row .k { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--mute); }
+  .sw .row .k b { display:block; font-size:15px; text-transform:none; letter-spacing:0; color:inherit; font-weight:500; margin-top:4px; }
+  .sw .row:hover .k b { color:#fff; }
+  .sw .row .cd { font-family:'JetBrains Mono'; font-size:24px; font-weight:600; text-align:right; border-left:1.5px solid var(--ink); font-variant-numeric: tabular-nums; }
+  .sw .row .cd.urgent { color:var(--acc); }
+  .sw .row .cd small { display:block; font-family:'Space Grotesk'; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--mute); font-weight:400; }
+  .sw footer { display:flex; justify-content:space-between; align-items:center; padding:18px 24px; font-size:13px; }
+
+  /* =========================================================
+     D — Warm Kente (friendly, Ghanaian accents)
+     ========================================================= */
+  .ke { --ink:#1b1b18; --mute:#6f6b62; --g:#006b3f; --y:#f2b705; --r:#ce1126; --line:#efece6; font-family:'DM Sans', sans-serif; color:var(--ink); padding:22px 40px 44px; background:#fff; }
+  .ke .stripe { position:absolute; top:0; left:0; right:0; height:5px; background: linear-gradient(90deg, var(--r) 0 33.3%, var(--y) 0 66.6%, var(--g) 0); }
+  .ke nav { display:flex; align-items:center; gap:22px; padding:10px 0 18px; }
+  .ke .logo { font-family:'Bricolage Grotesque'; font-weight:700; font-size:24px; margin-right:auto; display:flex; align-items:center; gap:6px; }
+  .ke .logo .star { color:var(--ink); font-size:18px; }
+  .ke nav a { font-size:15px; color:var(--mute); text-decoration:none; transition: color .2s; }
+  .ke nav a:hover { color:var(--g); }
+  .ke-btn { position:relative; overflow:hidden; padding:12px 22px; border-radius:14px; background:var(--g); color:#fff; font-weight:700; font-size:14px; box-shadow: 0 4px 0 #004d2d; transition: transform .15s, box-shadow .15s; }
+  .ke-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #004d2d; }
+  .ke-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #004d2d; }
+  .ke-btn.light { background:#fff; color:var(--ink); box-shadow: 0 0 0 1.5px var(--line) inset, 0 4px 0 var(--line); }
+  .ke-btn .ripple { position:absolute; border-radius:50%; transform:scale(0); background:rgba(255,255,255,.5); animation: rip .6s ease-out forwards; pointer-events:none; }
+  .ke-btn.light .ripple { background:rgba(0,107,63,.18); }
+  @keyframes rip { to { transform:scale(4); opacity:0; } }
+  .ke header { display:grid; grid-template-columns: 1.2fr 1fr; gap:36px; align-items:center; padding:34px 0 28px; }
+  .ke .hello { display:inline-flex; gap:8px; align-items:center; font-size:14px; font-weight:500; padding:7px 12px; border-radius:999px; background:#fff7dc; color:#7a5a00; }
+  .ke h1 { font-family:'Bricolage Grotesque'; font-size:58px; line-height:1; letter-spacing:-.03em; font-weight:700; margin:16px 0 14px; }
+  .ke h1 u { text-decoration:none; background: linear-gradient(transparent 62%, #ffe27a 62%); }
+  .ke header p { color:var(--mute); font-size:17px; line-height:1.6; }
+  .ke .majors { display:grid; grid-template-columns: repeat(3,1fr); gap:10px; }
+  .ke .chip { text-align:left; padding:14px; border-radius:16px; border:1.5px solid var(--line); background:#fff; font-weight:500; font-size:14px; transition: transform .25s cubic-bezier(.3,1.6,.5,1), border-color .2s, background .2s; }
+  .ke .chip i { display:block; width:28px; height:28px; border-radius:9px; margin-bottom:10px; font-style:normal; display:grid; place-items:center; font-size:13px; font-weight:700; }
+  .ke .chip:hover { transform: translateY(-3px) rotate(-1deg); border-color:#d8d3c8; }
+  .ke .chip.on { border-color:var(--g); background:#f0f8f3; }
+  .ke .grid { display:grid; grid-template-columns: repeat(3,1fr); gap:20px; perspective: 1000px; }
+  .ke .card { position:relative; padding:22px; border-radius:20px; background:#fff; border:1.5px solid var(--line); transform-style:preserve-3d; transition: transform .2s ease-out, box-shadow .3s; overflow:hidden; }
+  .ke .card:hover { box-shadow: 0 30px 50px -25px rgba(0,0,0,.25); }
+  .ke .card::after { content:""; position:absolute; inset:0; pointer-events:none; background: radial-gradient(300px circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,.7), transparent 50%); opacity:0; transition: opacity .3s; mix-blend-mode: soft-light; }
+  .ke .card:hover::after { opacity:1; }
+  .ke .card .kt { position:absolute; top:0; left:22px; right:22px; height:4px; border-radius:0 0 4px 4px; background: repeating-linear-gradient(90deg, var(--g) 0 14px, var(--y) 14px 22px, var(--r) 22px 28px, var(--y) 28px 36px); }
+  .ke .card .top { display:flex; gap:12px; align-items:center; margin-top:6px; }
+  .ke .av { width:44px; height:44px; border-radius:50%; display:grid; place-items:center; font-weight:700; color:#fff; font-size:14px; }
+  .ke .card h3 { font-family:'Bricolage Grotesque'; font-size:20px; font-weight:700; letter-spacing:-.01em; margin:16px 0 10px; line-height:1.15; }
+  .ke .co { font-size:14px; font-weight:500; } .ke .co small { display:block; color:var(--mute); font-weight:400; font-size:13px; }
+  .ke .tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+  .ke .tags span { font-size:12px; padding:5px 10px; border-radius:8px; background:#f6f4ef; color:#4a463e; font-weight:500; }
+  .ke .tags span.paid { background:#e3f3ea; color:#00512f; }
+  .ke .foot { display:flex; justify-content:space-between; align-items:center; padding-top:14px; border-top:1.5px dashed var(--line); }
+  .ke .cd { font-size:13px; color:var(--mute); } .ke .cd b { display:block; color:var(--ink); font-size:16px; font-variant-numeric: tabular-nums; }
+  .ke .cd.urgent b { color:var(--r); }
+
+  @media (max-width: 900px) {
+    .pa, .gl, .ke { padding-left:20px; padding-right:20px; }
+    .pa header, .sw header, .ke header { grid-template-columns: 1fr; }
+    .pa h1, .gl h1, .ke h1 { font-size:42px; } .sw h1 { font-size:58px; border-right:0; border-bottom:1.5px solid var(--ink); }
+    .pa .row { grid-template-columns: 1fr; gap:10px; } .pa .apply { justify-self:start; }
+    .gl .grid, .ke .grid { grid-template-columns: 1fr; }
+    .sw nav { grid-template-columns: 1fr auto; } .sw nav a { display:none; }
+    .sw .row { grid-template-columns: 1fr; } .sw .row .n, .sw .row .cd { border:0; text-align:left; }
+    .pa nav a, .gl nav a, .ke nav a { display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="picker"><div class="picker-inner">
+  <strong>InternGH · pick a direction</strong>
+  <a href="#a">A · Clean Paper</a>
+  <a href="#b">B · Soft Glass</a>
+  <a href="#c">C · Swiss Grid</a>
+  <a href="#d">D · Warm Kente</a>
+</div></div>
+
+<!-- ================= A ================= -->
+<section class="option" id="a">
+  <div class="option-head">
+    <div>
+      <div class="tag">Option A</div>
+      <h2>Clean Paper</h2>
+      <p>Editorial and calm. Serif headlines, hairline rules, lots of white space and one green accent. Feels like a trusted university publication.</p>
+    </div>
+    <ul><li>Soft green spotlight follows the mouse</li><li>Buttons fill from the bottom on hover</li><li>Rows slide in and arrows nudge forward</li></ul>
+  </div>
+  <div class="frame pa" data-design="pa">
+    <nav>
+      <div class="logo">Intern<i>GH</i></div>
+      <a href="#a">Opportunities</a><a href="#a">Deadlines</a><a href="#a">Saved</a><a href="#a">Ask AI</a>
+      <button class="pa-btn">Sign in</button>
+    </nav>
+    <header>
+      <h1>Opportunities, sorted by <em>your major.</em></h1>
+      <div>
+        <p>Internships, fellowships and workshops for University of Ghana students, gathered in one place with live deadline countdowns.</p>
+        <button class="pa-btn solid">Find my matches →</button>
+      </div>
+    </header>
+    <div class="chips"></div>
+    <div class="list"></div>
+  </div>
+</section>
+
+<!-- ================= B ================= -->
+<section class="option" id="b">
+  <div class="option-head">
+    <div>
+      <div class="tag">Option B</div>
+      <h2>Soft Glass</h2>
+      <p>Airy and modern. Rounded frosted cards over faint pastel color that drifts with your cursor. Friendly, app-like and very mobile-native.</p>
+    </div>
+    <ul><li>Pastel glow trails the cursor</li><li>Magnetic buttons pull toward the mouse</li><li>Cards lift with a soft colored shadow</li></ul>
+  </div>
+  <div class="frame gl" data-design="gl">
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+    <nav>
+      <div class="logo"><span class="dot"></span>InternGH</div>
+      <a href="#b">Explore</a><a href="#b">Deadlines</a><a href="#b">Saved</a><a href="#b">Ask AI</a>
+      <button class="gl-btn magnetic">Get alerts</button>
+    </nav>
+    <header>
+      <span class="eyebrow">128 open opportunities this week</span>
+      <h1>Your next opportunity, <span>matched to your major</span></h1>
+      <p>Pick your department and level. We'll show what fits and remind you before it closes.</p>
+      <div class="search"><input placeholder="Try “200-level Statistics, paid, remote”" /><button class="gl-btn magnetic">Search</button></div>
+    </header>
+    <div class="chips"></div>
+    <div class="grid"></div>
+  </div>
+</section>
+
+<!-- ================= C ================= -->
+<section class="option" id="c">
+  <div class="option-head">
+    <div>
+      <div class="tag">Option C</div>
+      <h2>Swiss Grid</h2>
+      <p>Bold and confident. Strict black grid lines, big type, monospace countdowns and a single red-orange accent. Feels sharp and urgent.</p>
+    </div>
+    <ul><li>Custom cursor: dot plus trailing ring</li><li>Ring grows over anything clickable</li><li>Rows and buttons wipe to black on hover</li></ul>
+  </div>
+  <div class="frame sw" data-design="sw">
+    <div class="cur-dot"></div><div class="cur-ring"></div>
+    <nav>
+      <div class="logo">Intern<b>GH</b></div>
+      <a href="#c">Feed</a><a href="#c">Deadlines</a><a href="#c">Ask AI</a>
+      <button class="sw-btn acc">Sign in</button>
+    </nav>
+    <header>
+      <h1>Find work<br/>by <span>major.</span></h1>
+      <div class="side">
+        <p>Every internship, fellowship and workshop for UG students. One feed. Live deadlines. No more hearing about it on WhatsApp the day after it closed.</p>
+        <div class="stat">128<small>Open right now</small></div>
+        <button class="sw-btn">Choose my major →</button>
+      </div>
+    </header>
+    <div class="chips"></div>
+    <div class="list"></div>
+    <footer><span>Showing matches · sorted by deadline</span><button class="sw-btn">View all</button></footer>
+  </div>
+</section>
+
+<!-- ================= D ================= -->
+<section class="option" id="d">
+  <div class="option-head">
+    <div>
+      <div class="tag">Option D</div>
+      <h2>Warm Kente</h2>
+      <p>Friendly and local. Clean white base with small Ghana-flag and kente-pattern accents, rounded shapes and chunky, tactile buttons. Feels proudly Ghanaian.</p>
+    </div>
+    <ul><li>Cards tilt in 3D toward the cursor with a light sheen</li><li>Buttons press down and ripple on click</li><li>Major tiles bounce on hover</li></ul>
+  </div>
+  <div class="frame ke" data-design="ke">
+    <div class="stripe"></div>
+    <nav>
+      <div class="logo">InternGH <span class="star">★</span></div>
+      <a href="#d">Opportunities</a><a href="#d">Deadlines</a><a href="#d">Saved</a><a href="#d">Ask AI</a>
+      <button class="ke-btn light">Sign in</button>
+      <button class="ke-btn">Get WhatsApp alerts</button>
+    </nav>
+    <header>
+      <div>
+        <span class="hello">Akwaaba, Legon 👋</span>
+        <h1>Find the <u>right opportunity</u> for your major</h1>
+        <p>Pick your course and level. We match you with internships, fellowships and workshops, and remind you before deadlines.</p>
+      </div>
+      <div class="majors chips"></div>
+    </header>
+    <div class="grid"></div>
+  </div>
+</section>
+
+<div style="height:80px"></div>
+
+<script>
+  /* ---------- Dummy data ---------- */
+  const H = 3600e3, D = 24 * H, now = Date.now();
+  const LISTINGS = [
+    { co:'Nkosuo Tech', ini:'NT', color:'#4f46e5', role:'Software Engineering Intern', major:'Computer Science', loc:'Accra', pay:'Paid', dur:'3 months', lvl:'300+', due: now + 4*D + 6*H },
+    { co:'Ridge Medical Centre', ini:'RM', color:'#0891b2', role:'Clinical Nursing Attachment', major:'Nursing', loc:'Accra', pay:'Unpaid', dur:'8 weeks', lvl:'200+', due: now + 2*D + 3*H },
+    { co:'Sika Capital', ini:'SC', color:'#ca8a04', role:'Economics Research Fellowship', major:'Economics', loc:'Accra', pay:'Paid', dur:'6 months', lvl:'400', due: now + 11*D },
+    { co:'DataSense Ghana', ini:'DS', color:'#16a34a', role:'Junior Data Analyst Program', major:'Statistics', loc:'Remote', pay:'Paid', dur:'4 months', lvl:'200+', due: now + 9*D + 2*H },
+    { co:'Adom & Partners', ini:'AP', color:'#b91c1c', role:'Legal Research Intern', major:'Law', loc:'Accra', pay:'Paid', dur:'10 weeks', lvl:'300+', due: now + 6*D + 14*H },
+    { co:'Kente Labs', ini:'KL', color:'#db2777', role:'Product Design Internship', major:'Computer Science', loc:'Remote', pay:'Paid', dur:'3 months', lvl:'200+', due: now + 15*D },
+    { co:'Volta Health Trust', ini:'VH', color:'#0d9488', role:'Public Health Workshop', major:'Nursing', loc:'Ho', pay:'Free', dur:'2 days', lvl:'100+', due: now + 1*D + 20*H },
+    { co:'Ghana Policy Lab', ini:'GP', color:'#7c3aed', role:'Policy & Statistics Intern', major:'Statistics', loc:'Accra', pay:'Paid', dur:'12 weeks', lvl:'300+', due: now + 5*D },
+    { co:'Accra Law Clinic', ini:'AL', color:'#9a3412', role:'Pro Bono Clinic Volunteer', major:'Law', loc:'Accra', pay:'Unpaid', dur:'Semester', lvl:'200+', due: now + 3*D + 8*H },
+    { co:'Bloom Microfinance', ini:'BM', color:'#65a30d', role:'Financial Inclusion Intern', major:'Economics', loc:'Kumasi', pay:'Paid', dur:'3 months', lvl:'300+', due: now + 7*D },
+  ];
+  const MAJORS = ['All', 'Computer Science', 'Economics', 'Nursing', 'Law', 'Statistics'];
+  const MAJOR_COLORS = { 'All':['#1b1b18','#f2f0ea'], 'Computer Science':['#4f46e5','#eef2ff'], 'Economics':['#a16207','#fef9c3'], 'Nursing':['#0e7490','#ecfeff'], 'Law':['#b91c1c','#fee2e2'], 'Statistics':['#15803d','#dcfce7'] };
+
+  const pad = n => String(n).padStart(2, '0');
+  function left(due) {
+    const ms = Math.max(0, due - Date.now());
+    return { d: Math.floor(ms / D), h: Math.floor(ms % D / H), m: Math.floor(ms % H / 6e4), s: Math.floor(ms % 6e4 / 1e3), urgent: ms < 3 * D, ms };
+  }
+
+  /* ---------- Per-design templates ---------- */
+  const TPL = {
+    pa: {
+      max: 4, list: '.list',
+      chip: (m, on) => `<button class="chip ${on ? 'on' : ''}" data-m="${m}">${m}</button>`,
+      item: (o, i) => `<div class="row"><div><div class="co">${o.co} · ${o.major}</div><div class="role">${o.role}</div><div class="meta"><b>${o.pay}</b> · ${o.loc} · ${o.dur} · Level ${o.lvl}</div></div>
+        <div class="cd" data-due="${o.due}" data-fmt="pa"></div><a class="apply" href="#a">Apply <span>→</span></a></div>`,
+    },
+    gl: {
+      max: 3, list: '.grid',
+      chip: (m, on) => `<button class="chip ${on ? 'on' : ''}" data-m="${m}">${m}</button>`,
+      item: o => `<div class="card"><div class="top"><div class="av" style="background:${o.color}">${o.ini}</div><button class="save" aria-label="Save">☆</button></div>
+        <h3>${o.role}</h3><div class="co">${o.co}</div>
+        <div class="tags"><span class="${o.pay === 'Paid' ? 'paid' : ''}">${o.pay}</span><span>${o.loc}</span><span>${o.dur}</span><span>L${o.lvl}</span></div>
+        <div class="left"><span>Closes in</span><b data-due="${o.due}" data-fmt="gl"></b></div>
+        <div class="bar"><i style="width:${Math.max(8, 100 - (o.due - now) / (16 * D) * 100)}%"></i></div>
+        <button class="gl-btn magnetic">Apply now</button></div>`,
+    },
+    sw: {
+      max: 4, list: '.list',
+      chip: (m, on) => `<button class="chip ${on ? 'on' : ''}" data-m="${m}">${m}</button>`,
+      item: (o, i) => `<div class="row hot"><div class="n">${pad(i + 1)}</div><div class="role">${o.role}<small>${o.co}</small></div>
+        <div class="k">Type<b>${o.pay} · ${o.dur}</b></div><div class="k">Where<b>${o.loc}</b></div>
+        <div class="cd" data-due="${o.due}" data-fmt="sw"></div></div>`,
+    },
+    ke: {
+      max: 3, list: '.grid',
+      chip: (m, on) => { const [c, bg] = MAJOR_COLORS[m]; return `<button class="chip ${on ? 'on' : ''}" data-m="${m}"><i style="background:${bg};color:${c}">${m === 'All' ? '★' : m[0]}</i>${m}</button>`; },
+      item: o => `<div class="card tilt"><div class="kt"></div><div class="top"><div class="av" style="background:${o.color}">${o.ini}</div><div class="co">${o.co}<small>${o.loc} · Level ${o.lvl}</small></div></div>
+        <h3>${o.role}</h3><div class="tags"><span class="${o.pay === 'Paid' ? 'paid' : ''}">${o.pay}</span><span>${o.dur}</span><span>${o.major}</span></div>
+        <div class="foot"><div class="cd" data-due="${o.due}" data-fmt="ke"></div><button class="ke-btn">Apply</button></div></div>`,
+    },
+  };
+
+  const FMT = {
+    pa: t => `${t.d}d ${pad(t.h)}h ${pad(t.m)}m<small>${t.urgent ? 'Closing soon' : 'Left to apply'}</small>`,
+    gl: t => `${t.d}d ${pad(t.h)}h ${pad(t.m)}m ${pad(t.s)}s`,
+    sw: t => `${pad(t.d)}:${pad(t.h)}:${pad(t.m)}:${pad(t.s)}<small>D : H : M : S</small>`,
+    ke: t => `${t.urgent ? 'Closing soon' : 'Closes in'}<b>${t.d} days, ${t.h} hrs</b>`,
+  };
+
+  function tick() {
+    document.querySelectorAll('[data-due]').forEach(el => {
+      const t = left(+el.dataset.due);
+      el.innerHTML = FMT[el.dataset.fmt](t);
+      el.classList.toggle('urgent', t.urgent);
+    });
+  }
+
+  function render(frame, major) {
+    const tpl = TPL[frame.dataset.design];
+    frame.querySelector('.chips').innerHTML = MAJORS.map(m => tpl.chip(m, m === major)).join('');
+    const items = LISTINGS.filter(o => major === 'All' || o.major === major).sort((a, b) => a.due - b.due).slice(0, tpl.max);
+    frame.querySelector(tpl.list).innerHTML = items.map(tpl.item).join('');
+    tick();
+    wire(frame);
+  }
+
+  document.querySelectorAll('.frame').forEach(frame => {
+    render(frame, 'All');
+    frame.addEventListener('click', e => {
+      const chip = e.target.closest('.chip');
+      if (chip) render(frame, chip.dataset.m);
+      const save = e.target.closest('.save');
+      if (save) { save.classList.toggle('on'); save.textContent = save.classList.contains('on') ? '★' : '☆'; }
+    });
+  });
+  setInterval(tick, 1000);
+
+  /* ---------- Motion: A spotlight ---------- */
+  const pa = document.querySelector('.pa');
+  pa.addEventListener('mousemove', e => {
+    const r = pa.getBoundingClientRect();
+    pa.style.setProperty('--x', e.clientX - r.left + 'px');
+    pa.style.setProperty('--y', e.clientY - r.top + 'px');
+  });
+
+  /* ---------- Motion: B drifting blobs ---------- */
+  const gl = document.querySelector('.gl');
+  const blobs = [...gl.querySelectorAll('.blob')].map((el, i) => ({ el, x: 0, y: 0, k: [0.06, 0.04, 0.03][i], f: [1, -0.6, 0.4][i] }));
+  let gx = 0, gy = 0;
+  gl.addEventListener('mousemove', e => { const r = gl.getBoundingClientRect(); gx = e.clientX - r.left - r.width / 2; gy = e.clientY - r.top - r.height / 2; });
+  gl.addEventListener('mouseleave', () => { gx = 0; gy = 0; });
+  (function loop() {
+    blobs.forEach(b => { b.x += (gx * b.f * 0.5 - b.x) * b.k; b.y += (gy * b.f * 0.5 - b.y) * b.k; b.el.style.transform = `translate(${b.x}px, ${b.y}px)`; });
+    requestAnimationFrame(loop);
+  })();
+
+  /* ---------- Motion: C custom cursor ---------- */
+  const sw = document.querySelector('.sw'), dot = sw.querySelector('.cur-dot'), ring = sw.querySelector('.cur-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  sw.addEventListener('mousemove', e => {
+    const r = sw.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top;
+    dot.style.transform = `translate(${mx}px, ${my}px)`;
+    ring.classList.toggle('big', !!e.target.closest('button, a, .row'));
+  });
+  sw.addEventListener('mouseenter', () => sw.classList.add('inside'));
+  sw.addEventListener('mouseleave', () => sw.classList.remove('inside'));
+  (function loop() { rx += (mx - rx) * 0.15; ry += (my - ry) * 0.15; ring.style.transform = `translate(${rx}px, ${ry}px)`; requestAnimationFrame(loop); })();
+
+  /* ---------- Per-render wiring: magnetic (B), tilt (D), ripple (D) ---------- */
+  function wire(frame) {
+    frame.querySelectorAll('.magnetic').forEach(btn => {
+      btn.onmousemove = e => {
+        const r = btn.getBoundingClientRect();
+        btn.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * 0.25}px, ${(e.clientY - r.top - r.height / 2) * 0.35}px)`;
+      };
+      btn.onmouseleave = () => { btn.style.transform = ''; };
+    });
+    frame.querySelectorAll('.tilt').forEach(card => {
+      card.onmousemove = e => {
+        const r = card.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+        card.style.transform = `rotateY(${(px - 0.5) * 14}deg) rotateX(${(0.5 - py) * 12}deg) translateZ(6px)`;
+        card.style.setProperty('--mx', px * 100 + '%'); card.style.setProperty('--my', py * 100 + '%');
+      };
+      card.onmouseleave = () => { card.style.transform = ''; };
+    });
+  }
+  wire(document);
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.ke-btn');
+    if (!btn) return;
+    const r = btn.getBoundingClientRect(), s = Math.max(r.width, r.height), rip = document.createElement('span');
+    rip.className = 'ripple';
+    rip.style.cssText = `width:${s}px;height:${s}px;left:${e.clientX - r.left - s / 2}px;top:${e.clientY - r.top - s / 2}px`;
+    btn.appendChild(rip); setTimeout(() => rip.remove(), 600);
+  });
+</script>
+</body>
+</html>

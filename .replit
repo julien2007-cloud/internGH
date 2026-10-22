@@ -1,0 +1,15 @@
+modules = ["nodejs-20", "web"]
+
+# Workspace preview: install deps, then start Vite on the port Replit exposes.
+run = "npm install && npm run dev -- --host 0.0.0.0 --port 5000"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+# Publish as a static site: build with Vite and serve the dist/ folder.
+# The app uses hash routes (#/app, #/about...), so no rewrites are needed.
+[deployment]
+deploymentTarget = "static"
+build = ["sh", "-c", "npm install && npm run build"]
+publicDir = "dist"
