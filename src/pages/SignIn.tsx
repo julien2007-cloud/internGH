@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Toggle } from '../components/Bits'
 import { Icon } from '../components/Icon'
+import { ThemeToggle } from '../components/ThemeToggle'
 import type { Level, MajorId } from '../data/majors'
 import { LEVELS, MAJORS } from '../data/majors'
 import { go } from '../lib/router'
@@ -130,6 +131,7 @@ export function SignIn({ existing, onDone }: Props) {
       <a className="btn ghost sm auth-back" href="#/" data-magnetic="0.2">
         <Icon name="arrowLeft" size={15} /> Back to home
       </a>
+      <ThemeToggle className="auth-theme" />
       <a className="logo auth-logo" href="#/">
         <span className="logo-mark"><Icon name="cap" size={15} /></span>
         InternGH

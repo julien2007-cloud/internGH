@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Toggle } from '../components/Bits'
 import { Icon } from '../components/Icon'
 import { OpportunityCard } from '../components/OpportunityCard'
+import { ThemeToggle } from '../components/ThemeToggle'
 import type { OppDetails, WorkMode } from '../data/details'
 import type { Level, MajorId } from '../data/majors'
 import { LEVELS, MAJORS } from '../data/majors'
@@ -192,7 +193,10 @@ export function Post({ mode, user }: Props) {
           <span className="logo-mark"><Icon name="cap" size={15} /></span>
           InternGH <span className="for">{tip ? 'Student tips' : 'For employers'}</span>
         </a>
-        <a className="btn ghost sm" href={backHref}><Icon name="arrowLeft" size={14} /> Back</a>
+        <div className="post-bar-actions">
+          <ThemeToggle />
+          <a className="btn ghost sm" href={backHref}><Icon name="arrowLeft" size={14} /> Back</a>
+        </div>
       </header>
 
       {done ? (

@@ -7,6 +7,14 @@
     <meta name="theme-color" content="#ffffff" />
     <meta name="description" content="InternGH: internships, fellowships and workshops for University of Ghana students, matched to your major." />
     <title>InternGH · Opportunities by major</title>
+    <script>
+      // Apply the saved (or system) theme before first paint to avoid a light flash in dark mode.
+      try {
+        var t = localStorage.getItem('igh.theme')
+        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        document.documentElement.dataset.theme = t
+      } catch (e) {}
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />

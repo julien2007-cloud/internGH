@@ -3,6 +3,7 @@ import { go } from '../lib/router'
 import type { User } from '../lib/user'
 import { firstName } from '../lib/user'
 import { Icon } from './Icon'
+import { ThemeToggle } from './ThemeToggle'
 
 export function PublicNav({ user, active }: { user: User | null; active: Route }) {
   return (
@@ -16,6 +17,7 @@ export function PublicNav({ user, active }: { user: User | null; active: Route }
           <a href="#/" className={`tab ${active === 'welcome' ? 'on' : ''}`}>Home</a>
           <a href="#/about" className={`tab ${active === 'about' ? 'on' : ''}`}>About</a>
         </div>
+        <ThemeToggle />
         {user ? (
           <button className="btn" data-magnetic="0.25" onClick={() => go('app')}>
             Continue as {firstName(user.name)} <Icon name="arrow" size={16} />

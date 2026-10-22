@@ -5,6 +5,7 @@ import type { User } from '../lib/user'
 import { initialsOf } from '../lib/user'
 import type { IconName } from './Icon'
 import { Icon } from './Icon'
+import { ThemePicker, ThemeToggle } from './ThemeToggle'
 
 export type View = 'explore' | 'deadlines' | 'saved'
 
@@ -79,6 +80,7 @@ export function Nav({ view, onView, savedCount, user, onAlerts, onAsk, onLogOut 
             <Icon name="bell" size={16} /> <span className="lbl">Get alerts</span>
           </button>
 
+          <ThemeToggle />
           <div className="me" ref={menuRef}>
             <button
               className="me-btn"
@@ -97,6 +99,10 @@ export function Nav({ view, onView, savedCount, user, onAlerts, onAsk, onLogOut 
                   <span className="badge match" style={{ marginTop: 8 }}>
                     {user.level}-level · {majorById(user.major).name}
                   </span>
+                </div>
+                <div className="me-section">
+                  <small>Appearance</small>
+                  <ThemePicker />
                 </div>
                 <button role="menuitem" onClick={() => go('about')}>
                   <Icon name="users" size={16} /> About InternGH
