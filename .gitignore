@@ -25,3 +25,11 @@ dist-ssr
 
 # Replit upload package
 internGh-replit.zip
+
+# Demo recordings (large binaries)
+demo/
+
+# Local secrets
+.env
+.env.local
+.env.*.local

@@ -1,6 +1,7 @@
-// Listings posted by employers or students from the "Post an opportunity" page.
-// The demo keeps them in localStorage and merges them into OPPORTUNITIES so
-// every part of the app (feed, assistant, apply page) sees them.
+// Listings posted from the "Post an opportunity" page. Postings published with the
+// publisher code live on the server (/api/listings) and are shared with everyone;
+// the rest are kept on this device in localStorage. Both are merged into
+// OPPORTUNITIES so every part of the app (feed, assistant, apply page) sees them.
 import type { OppDetails } from './details'
 import { registerDetails } from './details'
 import type { Opportunity } from './opportunities'
@@ -32,6 +33,7 @@ export function loadPosted() {
   read().forEach(add)
 }
 
+/** Save on this device only. */
 export function publish(listing: PostedListing) {
   try {
     localStorage.setItem(KEY, JSON.stringify([listing, ...read()]))
@@ -39,4 +41,11 @@ export function publish(listing: PostedListing) {
     // storage unavailable; the listing still shows until the page reloads
   }
   add(listing)
+}
+
+/** Merge postings from the server; returns how many were new. */
+export function mergeShared(listings: PostedListing[]) {
+  const before = OPPORTUNITIES.length
+  listings.forEach(add)
+  return OPPORTUNITIES.length - before
 }

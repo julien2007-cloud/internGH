@@ -20,6 +20,7 @@ import { DEFAULT_FILTERS, applyFilters, fitsLevel, fitsMajor, isOpen } from './l
 import { useLocalStorage } from './lib/store'
 import { DAY, useNow } from './lib/time'
 import { toast } from './lib/toast'
+import { chatLink, sendListingToWhatsApp } from './lib/whatsapp'
 import type { User } from './lib/user'
 
 const byId = (id: string) => OPPORTUNITIES.find(o => o.id === id)
@@ -30,6 +31,8 @@ interface Props {
   onLogOut: () => void
   /** Listing to open on arrival, from #/app/<id>. */
   initialOpen?: string
+  /** Bumped when shared postings arrive from the server, so the feed re-renders with them. */
+  sharedVersion?: number
 }
 
 export default function MainApp({ user, onUser, onLogOut, initialOpen }: Props) {
@@ -70,6 +73,24 @@ export default function MainApp({ user, onUser, onLogOut, initialOpen }: Props) 
   // The apply page opens in a new tab; it marks the listing applied once the form is sent.
   const apply = (o: Opportunity) => {
     toast(`Opening ${o.org}'s application page`)
+  }
+
+  const whatsappListing = async (o: Opportunity) => {
+    if (!user.phone) {
+      toast('Add your WhatsApp number first')
+      setAlertsOpen(true)
+      return
+    }
+    toast('Sending to your WhatsApp…')
+    const res = await sendListingToWhatsApp(user.phone, o, Date.now())
+    if (res.ok) return toast('Sent to your WhatsApp')
+    if (res.error === 'window_closed') {
+      const chat = chatLink('Hi InternGH')
+      toast('Say hi to InternGH on WhatsApp first, then tap again')
+      if (chat) window.open(chat, '_blank', 'noopener')
+      return
+    }
+    toast(res.message)
   }
 
   const setReminder = (id: string, r: Reminder) => {
@@ -252,10 +273,20 @@ export default function MainApp({ user, onUser, onLogOut, initialOpen }: Props) 
           onApply={() => apply(current)}
           onReminder={r => setReminder(current.id, r)}
           onDraft={() => draftFor(current)}
+          onWhatsApp={() => whatsappListing(current)}
         />
       )}
 
-      {alertsOpen && <AlertsModal profile={profile} sample={mine[0]} defaultPhone={user.phone} onClose={closeAlerts} />}
+      {alertsOpen && (
+        <AlertsModal
+          profile={profile}
+          sample={mine[0]}
+          defaultPhone={user.phone}
+          name={user.name}
+          onSaved={phone => onUser({ ...user, phone, whatsapp: true })}
+          onClose={closeAlerts}
+        />
+      )}
     </>
   )
 }

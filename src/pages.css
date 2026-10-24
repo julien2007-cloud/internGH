@@ -284,6 +284,20 @@ a.logo, .pub a { text-decoration: none; }
 .logout-btn:hover { color: var(--hot); border-color: var(--hot-line); background: var(--hot-soft); transform: translateY(-1px); }
 .logout-btn:hover svg { animation: nudge 0.8s var(--ease) infinite; }
 
+/* Post page: publish to everyone + WhatsApp alerts */
+.publish-box { display: grid; gap: 12px; padding: 16px; border-radius: 16px; border: 1.5px solid var(--ok-line); background: var(--ok-soft); }
+.publish-box > b { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.publish-box > small { font-size: 13px; color: var(--mute); line-height: 1.5; }
+.alert-summary { display: flex; gap: 12px; align-items: flex-start; text-align: left; margin: 0 auto 22px; max-width: 480px; padding: 14px 16px; border-radius: 16px; background: var(--soft); color: var(--ink-2); font-size: 14px; line-height: 1.5; }
+.alert-summary small { display: block; color: var(--mute); margin-top: 4px; font-size: 13px; }
+.alert-summary svg { flex: none; margin-top: 2px; }
+.alert-summary.ok { background: var(--ok-soft); } .alert-summary.ok svg { color: #16a34a; }
+.alert-summary.warn { background: var(--warn-soft); } .alert-summary.warn svg { color: var(--warn-ink); }
+
+/* WhatsApp action in the details panel */
+.mini-toggle.wa { color: #16a34a; border-color: var(--ok-line); }
+.mini-toggle.wa:hover { background: var(--ok-soft); border-color: #16a34a; }
+
 /* ---------- Theme toggle ---------- */
 .theme-btn {
   position: relative; width: 40px; height: 40px; flex: none; border-radius: 50%; overflow: hidden;

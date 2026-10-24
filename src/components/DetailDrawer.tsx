@@ -23,9 +23,10 @@ interface Props {
   onApply: () => void
   onReminder: (r: Reminder) => void
   onDraft: () => void
+  onWhatsApp: () => void
 }
 
-export function DetailDrawer({ opp: o, saved, applied, reminder, onClose, onSave, onApply, onReminder, onDraft }: Props) {
+export function DetailDrawer({ opp: o, saved, applied, reminder, onClose, onSave, onApply, onReminder, onDraft, onWhatsApp }: Props) {
   const now = useNow(1000)
   const t = timeLeft(o.deadline, now)
   const d = detailsFor(o)
@@ -100,6 +101,9 @@ export function DetailDrawer({ opp: o, saved, applied, reminder, onClose, onSave
               </button>
               <button className={`mini-toggle ${reminder.d1 ? 'on' : ''}`} onClick={() => onReminder({ ...reminder, d1: !reminder.d1 })}>
                 <Icon name="bell" size={12} /> 1 day before
+              </button>
+              <button className="mini-toggle wa" onClick={onWhatsApp}>
+                <Icon name="chat" size={12} /> WhatsApp me this
               </button>
             </div>
           </div>

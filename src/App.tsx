@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import './pages.css'
 import { Ambient } from './components/Ambient'
@@ -9,7 +9,9 @@ import { Apply } from './pages/Apply'
 import { Post } from './pages/Post'
 import { SignIn } from './pages/SignIn'
 import { Welcome } from './pages/Welcome'
+import { mergeShared } from './data/posted'
 import { useMotionEffects } from './lib/motion'
+import { fetchServerListings, subscribeWhatsApp } from './lib/whatsapp'
 import { go, useRoute } from './lib/router'
 import { useLocalStorage } from './lib/store'
 import { toast } from './lib/toast'
@@ -26,6 +28,26 @@ export default function App() {
   useEffect(() => {
     if (blocked) go('signin')
   }, [blocked])
+
+  // Postings published to everyone live on the server; merge them in when entering the app.
+  const [shared, setShared] = useState(0)
+  useEffect(() => {
+    if (route !== 'app' && route !== 'apply') return
+    let live = true
+    fetchServerListings().then(list => {
+      if (live && mergeShared(list)) setShared(v => v + 1)
+    })
+    return () => {
+      live = false
+    }
+  }, [route])
+
+  const signedUp = async (u: User) => {
+    if (!u.whatsapp || !u.phone) return
+    const res = await subscribeWhatsApp(u.phone, u.name, [u.major], u.level)
+    if (res.ok && res.welcomed) toast('WhatsApp alerts on: check your phone')
+    else if (res.ok && res.stored) toast('WhatsApp alerts saved for your major')
+  }
 
   const logOut = () => {
     // Clear the user only once we've left the app route, or the sign-in redirect wins.
@@ -45,13 +67,15 @@ export default function App() {
           <SignIn
             existing={user}
             onDone={u => {
+              const isNew = user?.email !== u.email
               setUser(u)
               go('app')
               toast(`Welcome, ${firstName(u.name)}`)
+              if (isNew) void signedUp(u)
             }}
           />
         )}
-        {route === 'app' && user && <MainApp user={user} onUser={setUser} onLogOut={logOut} initialOpen={param} />}
+        {route === 'app' && user && <MainApp user={user} onUser={setUser} onLogOut={logOut} initialOpen={param} sharedVersion={shared} />}
         {route === 'apply' && <Apply oppId={param} user={user} />}
         {route === 'post' && <Post mode={param === 'tip' ? 'tip' : 'employer'} user={user} />}
       </div>

@@ -8,7 +8,9 @@ import type { Level, MajorId } from '../data/majors'
 import { LEVELS, MAJORS } from '../data/majors'
 import type { Opportunity, OppType } from '../data/opportunities'
 import { OPP_TYPES } from '../data/opportunities'
-import { publish } from '../data/posted'
+import { mergeShared, publish } from '../data/posted'
+import type { AlertReport } from '../lib/whatsapp'
+import { publishListing } from '../lib/whatsapp'
 import { DAY } from '../lib/time'
 import type { User } from '../lib/user'
 import { initialsOf } from '../lib/user'
@@ -74,6 +76,10 @@ export function Post({ mode, user }: Props) {
   // Review
   const [featured, setFeatured] = useState(false)
   const [authorised, setAuthorised] = useState(false)
+  // Publishing to everyone (matching students are always alerted on WhatsApp)
+  const [code, setCode] = useState('')
+  const [publishing, setPublishing] = useState(false)
+  const [outcome, setOutcome] = useState<{ shared: boolean; alerts?: AlertReport; note?: string } | null>(null)
   // Stable per page load so the draft id doesn't change while typing.
   const [today] = useState(() => Date.now())
 
@@ -168,14 +174,37 @@ export function Post({ mode, user }: Props) {
     return true
   }
 
-  const next = () => {
-    if (!validate(step)) return
-    if (step === 'review') {
+  const finish = async () => {
+    // With the publisher code: publish to every student (server) and optionally WhatsApp matches.
+    if (!tip && code.trim()) {
+      setPublishing(true)
+      const res = await publishListing(code.trim(), { opp: draft, details })
+      setPublishing(false)
+      if (res.ok) {
+        mergeShared([res.listing])
+        setDone(res.listing.opp)
+        setOutcome({ shared: true, alerts: res.alerts })
+        return
+      }
+      if (['bad_code', 'publishing_disabled', 'bad_listing', 'rate_limited'].includes(res.error)) {
+        setErrors({ code: res.message })
+        return
+      }
+      // Server not set up: fall back to this device so the work isn't lost.
       publish({ opp: draft, details })
       setDone(draft)
-    } else {
-      setStep(STEPS[stepIndex + 1].id)
+      setOutcome({ shared: false, note: res.message })
+      return
     }
+    publish({ opp: draft, details })
+    setDone(draft)
+    setOutcome({ shared: false })
+  }
+
+  const next = async () => {
+    if (!validate(step)) return
+    if (step === 'review') await finish()
+    else setStep(STEPS[stepIndex + 1].id)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
   const back = () => {
@@ -202,11 +231,19 @@ export function Post({ mode, user }: Props) {
       {done ? (
         <main className="post-done rise">
           <div className="success-icon"><Icon name="check" size={32} /></div>
-          <h1>{tip ? 'Thanks for the tip' : 'Your listing is live'}</h1>
-          <p>
-            <b>{done.title}</b> at {done.org} now shows for {done.majors.length === 1 ? 'one major' : `${done.majors.length} majors`} with a live countdown.
-            It's marked <b>Pending review</b> until an InternGH moderator verifies it{tip ? '' : ` using ${contact.trim()}`}.
-          </p>
+          <h1>{tip ? 'Thanks for the tip' : outcome?.shared ? 'Live for every student' : 'Your listing is live'}</h1>
+          {outcome?.shared ? (
+            <p>
+              <b>{done.title}</b> at {done.org} is now in the feed of every {majorList(done.majors)} student at {done.levels.join(', ')}-level.
+            </p>
+          ) : (
+            <p>
+              <b>{done.title}</b> at {done.org} now shows on this device for {done.majors.length === 1 ? 'one major' : `${done.majors.length} majors`} with a live countdown.
+              It's marked <b>Pending review</b> until an InternGH moderator verifies it{tip ? '' : ` using ${contact.trim()}`}.
+              {outcome?.note && <><br /><small>Not shared with everyone: {outcome.note}</small></>}
+            </p>
+          )}
+          {outcome?.shared && outcome.alerts && <AlertSummary alerts={outcome.alerts} deadline={done.deadline} />}
           <div className="post-done-card">
             <OpportunityCard opp={done} index={0} profile={{ major: done.majors[0], level: done.levels[0] }} saved={false} applied={false} onSave={() => {}} onOpen={() => {}} onApply={() => {}} />
           </div>
@@ -445,6 +482,18 @@ export function Post({ mode, user }: Props) {
                       </span>
                     </label>
                   )}
+                  {!tip && (
+                    <div className="publish-box">
+                      <b><Icon name="users" size={15} /> Publish to all students</b>
+                      <F label="Publisher code" error={errors.code} hint="Given to verified partners by the InternGH team. Leave blank to save on this device only.">
+                        <input type="password" autoComplete="off" value={code} onChange={e => { setCode(e.target.value); clear('code') }} placeholder="Publisher code" />
+                      </F>
+                      <small>
+                        <Icon name="chat" size={13} /> Every student subscribed for {majorList(draft.majors)} at {draft.levels.join(', ')}-level
+                        automatically gets a WhatsApp alert when this goes live, and reminders 3 days and 1 day before the deadline.
+                      </small>
+                    </div>
+                  )}
                   <label className={`consent ${errors.authorised ? 'bad' : ''}`}>
                     <input type="checkbox" checked={authorised} onChange={e => { setAuthorised(e.target.checked); clear('authorised') }} />
                     <span>{tip ? 'To the best of my knowledge these details are accurate.' : `I'm authorised to post this opportunity on behalf of ${draft.org}.`}</span>
@@ -457,8 +506,10 @@ export function Post({ mode, user }: Props) {
                 {stepIndex > 0 && (
                   <button type="button" className="btn ghost" onClick={back}><Icon name="arrowLeft" size={16} /> Back</button>
                 )}
-                <button type="submit" className="btn" data-magnetic="0.12">
-                  {step === 'review' ? <>{tip ? 'Share tip' : 'Publish listing'} <Icon name="send" size={16} /></> : <>Continue <Icon name="arrow" size={16} /></>}
+                <button type="submit" className="btn" data-magnetic="0.12" disabled={publishing}>
+                  {publishing ? <span className="spinner" /> : step === 'review'
+                    ? <>{tip ? 'Share tip' : code.trim() ? 'Publish and alert students' : 'Publish listing'} <Icon name="send" size={16} /></>
+                    : <>Continue <Icon name="arrow" size={16} /></>}
                 </button>
               </div>
             </form>
@@ -482,6 +533,27 @@ export function Post({ mode, user }: Props) {
           </aside>
         </div>
       )}
+    </div>
+  )
+}
+
+const majorList = (ids: MajorId[]) => ids.map(id => MAJORS.find(m => m.id === id)?.short ?? id).join(', ')
+
+/** What happened with WhatsApp after publishing to everyone. */
+function AlertSummary({ alerts, deadline }: { alerts: AlertReport; deadline: number }) {
+  const when = new Date(deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  const notConnected = alerts.errors.some(e => /not connected/i.test(e))
+  return (
+    <div className={`alert-summary ${alerts.failed || notConnected ? 'warn' : 'ok'}`}>
+      <Icon name="chat" size={18} />
+      <span>
+        {alerts.matched === 0
+          ? 'No subscribed students match this posting yet. New subscribers will still get the deadline reminders.'
+          : notConnected
+            ? `${alerts.matched} subscribed ${alerts.matched === 1 ? 'student matches' : 'students match'}, but WhatsApp isn't connected yet, so nothing was sent.`
+            : `WhatsApp alert sent to ${alerts.sent} of ${alerts.matched} matching ${alerts.matched === 1 ? 'student' : 'students'}${alerts.failed ? ` (${alerts.failed} failed: ${alerts.errors[0]})` : ''}.`}
+        <small>Reminders go out 3 days and 1 day before it closes on {when}.</small>
+      </span>
     </div>
   )
 }
