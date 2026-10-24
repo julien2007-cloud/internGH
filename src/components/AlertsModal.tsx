@@ -26,6 +26,7 @@ export function AlertsModal({ profile, sample, defaultPhone = '', name = '', onS
   const [freq, setFreq] = useState<'instant' | 'daily' | 'weekly'>('instant')
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
+  const [warning, setWarning] = useState('')
   // 'live' = welcome WhatsApp sent; 'saved' = criteria saved, WhatsApp not sending yet; 'demo' = preview only
   const [done, setDone] = useState<'live' | 'saved' | 'demo' | null>(null)
 
@@ -46,7 +47,10 @@ export function AlertsModal({ profile, sample, defaultPhone = '', name = '', onS
     const res = await subscribeWhatsApp(digits, name, majors, profile.level)
     setSending(false)
     if (res.ok && res.welcomed) setDone('live')
-    else if (res.ok && res.stored) setDone('saved')
+    else if (res.ok && res.stored) {
+      setWarning(res.warning ?? 'WhatsApp sending isn’t switched on for this site yet.')
+      setDone('saved')
+    }
     else if (!res.ok && res.error === 'not_configured') setDone('demo')
     else if (!res.ok) setError(res.message)
     else setDone('demo')
@@ -85,9 +89,9 @@ export function AlertsModal({ profile, sample, defaultPhone = '', name = '', onS
             <div className="success-icon" style={{ margin: '0 auto' }}><Icon name="check" size={30} /></div>
             <h2>Alerts saved</h2>
             <p style={{ color: 'var(--mute)' }}>
-              +233 {digits.slice(0, 2)} {digits.slice(2, 5)} {digits.slice(5)} will get WhatsApp alerts for new {majors.map(id => majorById(id).short).join(' / ')} {profile.level}-level opportunities and their deadlines,
-              as soon as WhatsApp sending is switched on for this site.
+              +233 {digits.slice(0, 2)} {digits.slice(2, 5)} {digits.slice(5)} will get WhatsApp alerts for new {majors.map(id => majorById(id).short).join(' / ')} {profile.level}-level opportunities and their deadlines.
             </p>
+            {warning && <p className="error" style={{ marginTop: 10 }}>The welcome message couldn’t be sent: {warning}</p>}
             <button className="btn block" style={{ marginTop: 20 }} onClick={onClose}>Done</button>
           </div>
         ) : done === 'demo' ? (

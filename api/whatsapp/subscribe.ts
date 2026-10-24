@@ -7,7 +7,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Subscriber } from '../_lib/catalog.js'
 import { LEVELS, MAJOR_NAMES } from '../_lib/catalog.js'
 import { db, keys, storeReady } from '../_lib/store.js'
-import { env, explain, isConfigured, normalizePhone, rateLimited, readJson, send, sendTemplate } from '../_lib/whatsapp.js'
+import { env, explain, isConfigured, normalizePhone, rateLimited, readJson, send, sendTemplate, WhatsAppError } from '../_lib/whatsapp.js'
 
 interface Body {
   phone?: string
@@ -45,8 +45,10 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   const template = env.welcomeTemplate()
   try {
     const id = await sendTemplate(phone, template, template === 'hello_world' ? [] : [first, majors.map(m => MAJOR_NAMES[m]).join(', ')])
+    console.log('welcome sent', { to: `${phone.slice(0, 4)}…${phone.slice(-3)}`, template, id })
     send(res, 200, { ok: true, stored, welcomed: true, id })
   } catch (e) {
+    console.error('welcome failed', { to: `${phone.slice(0, 4)}…${phone.slice(-3)}`, template, code: e instanceof WhatsAppError ? e.code : undefined, message: e instanceof Error ? e.message : String(e) })
     const { status, ...err } = explain(e)
     // Saved but the welcome failed: still a successful sign-up, report why.
     if (stored) return send(res, 200, { ok: true, stored, welcomed: false, warning: err.message })

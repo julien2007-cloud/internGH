@@ -46,7 +46,8 @@ export default function App() {
     if (!u.whatsapp || !u.phone) return
     const res = await subscribeWhatsApp(u.phone, u.name, [u.major], u.level)
     if (res.ok && res.welcomed) toast('WhatsApp alerts on: check your phone')
-    else if (res.ok && res.stored) toast('WhatsApp alerts saved for your major')
+    else if (res.ok && res.stored) toast(res.warning ? `Alerts saved, but WhatsApp said: ${res.warning}` : 'WhatsApp alerts saved for your major')
+    else if (!res.ok && res.error !== 'not_configured') toast(`WhatsApp: ${res.message}`)
   }
 
   const logOut = () => {
