@@ -48,6 +48,7 @@ export function PublicFooter() {
         <a href="#/about">About</a>
         <a href="#/signin">Sign in</a>
         <a href="#/post">Post an opportunity</a>
+        <a href="#/privacy">Privacy</a>
       </div>
       <small>Demo build · All companies and listings are fictional</small>
     </footer>

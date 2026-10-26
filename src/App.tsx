@@ -7,6 +7,7 @@ import MainApp from './MainApp'
 import { About } from './pages/About'
 import { Apply } from './pages/Apply'
 import { Post } from './pages/Post'
+import { Privacy } from './pages/Privacy'
 import { SignIn } from './pages/SignIn'
 import { Welcome } from './pages/Welcome'
 import { mergeShared } from './data/posted'
@@ -64,6 +65,7 @@ export default function App() {
       <div className="route" key={`${route}/${param}`}>
         {route === 'welcome' && <Welcome user={user} />}
         {route === 'about' && <About user={user} />}
+        {route === 'privacy' && <Privacy user={user} />}
         {route === 'signin' && (
           <SignIn
             existing={user}

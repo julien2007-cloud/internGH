@@ -7,8 +7,15 @@ import { MAJOR_NAMES } from '../_lib/catalog.js'
 import { db, keys, storeReady } from '../_lib/store.js'
 import { env, isConfigured, queryOf, readRaw, send, sendText, validSignature } from '../_lib/whatsapp.js'
 
+interface Status {
+  id: string
+  status: string // sent | delivered | read | failed
+  recipient_id?: string
+  errors?: { code?: number; title?: string; message?: string; error_data?: { details?: string } }[]
+}
+
 interface Incoming {
-  entry?: { changes?: { field?: string; value?: { messages?: { id: string; from: string; type: string; text?: { body?: string } }[]; contacts?: { profile?: { name?: string } }[] } }[] }[]
+  entry?: { changes?: { field?: string; value?: { messages?: { id: string; from: string; type: string; text?: { body?: string } }[]; contacts?: { profile?: { name?: string } }[]; statuses?: Status[] } }[] }[]
 }
 
 // Meta retries failed deliveries, so ignore message ids we've already answered.
@@ -39,6 +46,16 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   for (const entry of payload.entry ?? []) {
     for (const change of entry.changes ?? []) {
       if (change.field !== 'messages') continue
+      // Delivery reports: log failures with Meta's reason (visible in Vercel → Logs).
+      for (const s of change.value?.statuses ?? []) {
+        const to = s.recipient_id ? `+${s.recipient_id.slice(0, 3)}…${s.recipient_id.slice(-3)}` : '?'
+        if (s.status === 'failed') {
+          const err = s.errors?.[0]
+          console.error('delivery failed', { to, code: err?.code, reason: err?.title, details: err?.error_data?.details ?? err?.message })
+        } else {
+          console.log('delivery status', { to, status: s.status })
+        }
+      }
       const name = change.value?.contacts?.[0]?.profile?.name?.split(' ')[0]
       for (const m of change.value?.messages ?? []) {
         if (seen.has(m.id)) continue
@@ -46,6 +63,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         if (!isConfigured()) continue
         const text = (m.text?.body ?? '').trim()
         const phone = `+${m.from}`
+        console.log('incoming message', { from: `${phone.slice(0, 4)}…${phone.slice(-3)}`, type: m.type })
         const sub = storeReady() ? await db.get<Subscriber>(keys.subscriber(phone)) : null
         let reply: string
         if (/^stop\b/i.test(text)) {
